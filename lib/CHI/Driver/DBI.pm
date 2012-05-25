@@ -3,6 +3,7 @@ package CHI::Driver::DBI;
 use strict;
 use warnings;
 
+use DBI;
 use DBI::Const::GetInfoType;
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -17,6 +18,7 @@ my $type = "CHI::Driver::DBI";
 subtype "$type.DBIHandleGenerator" => as 'CodeRef';
 subtype "$type.DBIXConnector"      => as 'DBIx::Connector';
 subtype "$type.DBIHandle"          => as 'DBI::db';
+subtype "$type.DBIDSN"             => as 'Str';
 
 coerce "$type.DBIHandleGenerator" => from "$type.DBIXConnector" => via {
     my $dbixconn = $_;
@@ -25,6 +27,10 @@ coerce "$type.DBIHandleGenerator" => from "$type.DBIXConnector" => via {
 coerce "$type.DBIHandleGenerator" => from "$type.DBIHandle" => via {
     my $dbh = $_;
     sub { $dbh }
+};
+coerce "$type.DBIHandleGenerator" => from "$type.DBIDSN" => via {
+    my $dsn = $_;
+    sub { DBI->connect( $dsn ) }
 };
 
 has 'dbh'          => ( is => 'ro', isa => "$type.DBIHandleGenerator", coerce => 1 );
